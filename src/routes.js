@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import Splash from './pages/Splash';
@@ -11,24 +10,10 @@ import Main from './pages/Main';
 import { AppStyles } from '../AppStyles';
 import SingIn from './pages/SingIn';
 import CadastrarPonto from './pages/CadastrarPonto';
+import EditarPonto from './pages/EditarPonto';
+import DrawerContainer from '../src/components/drawer'
 
 const Stack = createStackNavigator();
-const Drawer = createDrawerNavigator();
-
-function DrawerNavigator() {
-  return (
-      <Drawer.Navigator
-          drawerStyle={{
-              width: "100%"
-          }}
-          drawerContent={(props) => {
-              return <DrawerContainer navigation={props.navigation} />
-          }}
-      >
-          <Drawer.Screen name="main" component={MainStack} />
-      </Drawer.Navigator>
-  )
-}
 
 
 function Routes() {
@@ -84,7 +69,18 @@ function Routes() {
                 }
               }}
             />
-            
+
+            <Stack.Screen
+              name="EditarPonto"
+              component={EditarPonto}
+              options={{
+                title: "Editando Ponto",
+                headerStyle: {
+                  backgroundColor: AppStyles.color.roxo
+                }
+              }}
+            />
+
             <Stack.Screen
               name="Main"
               component={Main}
@@ -92,9 +88,12 @@ function Routes() {
                 title: "ECO-SIS"
               }}
             />
-            <Stack.Screen 
+            <Stack.Screen
               name="Drawer"
-              component={DrawerNavigator}
+              component={DrawerContainer}
+              options={{
+                title: "Configurações"
+              }}
             />
           </Stack.Navigator>
         </NavigationContainer>

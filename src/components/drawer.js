@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, Dimensions, StyleSheet, Text, Switch } from 'react-native';
-import { connect } from 'react-redux';
+import { connect, useSelector } from 'react-redux';
 import { Creators as UserActions } from '../../store/ducks/user';
 import { AppStyles, AppImages } from '../../AppStyles';
 import { Icon } from 'react-native-elements'
@@ -11,42 +11,30 @@ const version = "00.00.00"
 
 const options = [
     {
-        title: "Dados Pessoais",
-        action: "dadosDoUsuario"
-    },
-    {
-        title: "Alterar Senha",
-        action: "alterarSenha"
-    },
-    /*{
-        title: "Ativar Biometria",
-        action: "biometria"
-    },*/
-    {
-        title: "Reportar prolema",
-        action: "reportar problema"
-    },
-    {
-        title: "Termos de uso",
-        action: "termosUso"
-    },
-    {
-        title: "Sair do App",
+        title: "Encerrar sessão",
         action: "logout"
     }
 
 ]
 
 
-function DrawerContainer({ navigation, user, logout }) {
+function DrawerContainer({ navigation, logout }) {
     const [isEnabled, setIsEnabled] = useState(false);
     const toggleSwitch = () => setIsEnabled(previousState => !previousState);
 
+    const { user } = useSelector(state => state);
+
+    console.log(user)
+
     const CloseButton = () => (
         <TouchableOpacity style={styles.closeButton}
-            onPress={() => navigation.closeDrawer()}
+            onPress={() => navigation.pop()}
         >
-            <Text> x</Text>
+            <Icon
+                name="times"
+                type='font-awesome-5'
+                color={"#000"}
+            />
         </TouchableOpacity>
     )
 
@@ -65,56 +53,34 @@ function DrawerContainer({ navigation, user, logout }) {
         <View style={{ flex: 1 }}>
             <CloseButton />
             <View style={styles.topContainer}>
-                <Image
-                    source={{ uri: `data:image/jpeg;base64,${user.Avatar}`}}
-                    style={styles.avatar} />
+                <View style={styles.avatar} >
+                    <Text style={{
+                        fontWeight: "bold",
+                        fontSize: 60,
+                        color: "#FFF"
+                    }}>
+                        {user.username !== undefined && user.username.split("")[0]}
+                    </Text>
+                </View>
                 <Text style={styles.nomeMedico}>
-                    {user.Nome}
-                </Text>
-                <Text style={{ fontSize: 16 }}>
-                    <Text style={styles.crmMedico}>
-                        CRM:
-                      </Text>
-                    {" " + user.CRM}
+                    {user.username}
                 </Text>
             </View>
             <View >
                 {options.map(option => (
                     <TouchableOpacity
-                    key={option.action}
+                        key={option.action}
                         style={styles.listItem}
                         onPress={() => handleOption(option)}
                     >
                         <Text>{option.title}</Text>
-                        {option.action === "biometria" ? (
-                            <Switch
-                                trackColor={{ false: AppStyles.color.cinzaInativo, true: "#6EDC5F" }}
-                                thumbColor={"#FFF"}
-                                ios_backgroundColor="#3e3e3e"
-                                onValueChange={toggleSwitch}
-                                value={isEnabled}
-                            />
-                        ) : (
-                                <Icon
-                                    name="chevron-right"
-                                    type='font-awesome-5'
-                                    color={AppStyles.color.azul}
-                                />
-                            )}
-
-
+                        <Icon
+                            name="chevron-right"
+                            type='font-awesome-5'
+                            color={AppStyles.color.azul}
+                        />
                     </TouchableOpacity>
                 ))}
-            </View>
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "space-around" }}>
-                <Image
-                    source={AppImages.images.LogoSantaCasa}
-                    style={styles.logo}
-                />
-                <Text style={{ color: AppStyles.color.cinza }}>
-                    <Text style={{ fontWeight: "bold" }}>VERSÃO</Text>
-                    {" " + version}
-                </Text>
             </View>
         </View>
     );
@@ -148,11 +114,12 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     avatar: {
+        backgroundColor: AppStyles.color.roxo,
         width: 100,
         height: 100,
         borderRadius: 50,
-        borderColor: AppStyles.color.cinzaClaro,
-        borderWidth: 1
+        justifyContent: "center",
+        alignItems: "center"
     },
     nomeMedico: {
         fontSize: 21,

@@ -116,7 +116,26 @@ export default Main = ({ navigation }) => {
     }
 
     if (!currentRegion) {
-        return null;
+        return <View style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: AppStyles.color.roxo
+        }}>
+            <Icon
+                name="exclamation-triangle"
+                size={130}
+                type='font-awesome-5'
+                color={"#fff"}
+            />
+            <Text style={{
+                color: "#fff",
+                fontSize: 30,
+                marginTop: 30
+            }}>
+                Sem localização do usuario!
+            </Text>
+        </View>;
     }
     return (
         <>
@@ -145,6 +164,16 @@ export default Main = ({ navigation }) => {
                     </TouchableOpacity>
                 )}
 
+            <TouchableOpacity
+                style={[styles.btnAdd, { top: 20 }]}
+                onPress={() => navigation.navigate("Drawer")}
+            >
+                <Icon
+                    name="cog"
+                    type='font-awesome-5'
+                    color={"#FFF"}
+                />
+            </TouchableOpacity>
             {addPoint && (
                 <View style={styles.barIcons}>
                     <TouchableOpacity
@@ -190,7 +219,15 @@ export default Main = ({ navigation }) => {
                             <TouchableOpacity
                                 style={styles.btnCaixa}
                                 onPress={() => {
-                                    console.log(user)
+                                    navigation.navigate("EditarPonto", {
+                                        point: pointSelecionado,
+                                        atualizar: () => {
+                                            setAddPoint(false);
+                                            setPointSelecionado(undefined)
+                                            setPoints([]);
+                                            loadDevs();
+                                        }
+                                    })
                                 }}
                             >
                                 <Text style={{ color: "#fff", fontWeight: "bold" }}>
@@ -240,8 +277,6 @@ export default Main = ({ navigation }) => {
                                     Linking.canOpenURL(url).then(supported => {
                                         if (supported) {
                                             Linking.openURL(url);
-                                        } else {
-                                            console.log('Don\'t know how to open URI: ' + url);
                                         }
                                     });
                                 }}>
@@ -274,7 +309,6 @@ export default Main = ({ navigation }) => {
                         coordinate={addCoordinate}
                         pinColor={AppStyles.color.verdeClaro}
                         onDragEnd={e => {
-                            console.log(e.nativeEvent.coordinate)
                             setAddCoordinate(e.nativeEvent.coordinate)
                         }}
                     />
