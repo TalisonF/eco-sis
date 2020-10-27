@@ -1,6 +1,6 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, PermissionsAndroid, Platform, Text, Linking, TouchableOpacity, View } from "react-native";
-import MapView, { Callout, Marker } from 'react-native-maps';
+import MapView, { Callout, Marker, CalloutSubview } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import api from "../services/api"
 import { useSelector } from "react-redux";
@@ -13,6 +13,7 @@ export default Main = ({ navigation }) => {
     const [currentRegion, setCurrenteRegion] = useState(null)
     const [points, setPoints] = useState([])
     const [addPoint, setAddPoint] = useState(false)
+    const [pointSelecionado, setPointSelecionado] = useState()
 
     const [addCoordinate, setAddCoordinate] = useState([])
 
@@ -105,27 +106,83 @@ export default Main = ({ navigation }) => {
     }
     return (
         <>
-            <TouchableOpacity
-                style={styles.btnAdd}
-                onPress={() => setAddPoint(!addPoint)}
-            >
-                <Icon
-                    name="plus"
-                    type='font-awesome-5'
-                    color={"#FFF"}
-                />
-            </TouchableOpacity>
-            {addPoint && (
                 <TouchableOpacity
-                    style={styles.btnCont}
-                    onPress={handleAddPoint}
+                    style={styles.btnAdd}
+                    onPress={() => setAddPoint(!addPoint)}
                 >
-                    <Text style={{ color: "#FFF", fontSize: 20, fontWeight: "bold" }}>
-                        Continuar
-                    </Text>
+                    <Icon
+                        name="plus"
+                        type='font-awesome-5'
+                        color={"#FFF"}
+                    />
                 </TouchableOpacity>
+            {addPoint && (
+                <View style={styles.barIcons}>
+                    <TouchableOpacity
+                        style={styles.btnCaixa}
+                        onPress={handleAddPoint}
+                    >
+                        <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                            Continuar
+                    </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.btnCaixa}
+                        onPress={() => {
+                            setAddPoint(false)
+                        }}
+                    >
+                        <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                            Cancelar
+                    </Text>
+                    </TouchableOpacity>
+                </View>
             )}
+            {addPoint && (
+                <View
+                    style={styles.textTopo}
+                >
+                    <Text style={{ color: "#000", fontSize: 20, fontWeight: "bold" }}>
+                        Adicionando novo ponto de coleta
+                    </Text>
+                    <Text style={{ color: "#000", fontSize: 13, fontWeight: "bold" }}>
+                        Mova o pin no mapa para o local desejado!
+                    </Text>
 
+                </View>
+            )}
+            {(pointSelecionado !== undefined && !addPoint) && (
+                <View style={[styles.barIcons, { height: 100, flexDirection: "column" }]}>
+                    <Text style={{ color: "#fff", fontWeight: "bold", alignSelf: "center" }}>
+                        {pointSelecionado.nome}
+                    </Text>
+                    {user.idUser === pointSelecionado.user_id && (
+                        <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
+                            <TouchableOpacity
+                                style={styles.btnCaixa}
+                                onPress={() => {
+                                    console.log(user)
+                                }}
+                            >
+                                <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                                    Editar
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.btnCaixa}
+                                onPress={() => {
+                                    console.log(pointSelecionado)
+                                }}
+                            >
+                                <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                                    Excluir
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                </View>
+            )}
             <MapView
                 onRegionChangeComplete={handleRegionChanged}
                 initialRegion={currentRegion}
@@ -134,6 +191,9 @@ export default Main = ({ navigation }) => {
             >
                 {points.map(point => {
                     const m = JSON.parse(point.materiais)
+                    if (addPoint) {
+                        return <></>
+                    }
                     return (
                         <Marker
                             key={point.id}
@@ -141,9 +201,11 @@ export default Main = ({ navigation }) => {
                                 latitude: parseFloat(point.lat),
                                 longitude: parseFloat(point.long)
                             }}
-                            pinColor="blue"
+                            pinColor={user.idUser === point.user_id ? "#90F" : AppStyles.color.verdeClaro}
+                            onPress={() => setPointSelecionado(point)}
                         >
                             <Callout
+                                tooltip={true}
                                 onPress={() => {
                                     const url = `google.navigation:q=${point.lat}+${point.long}`
                                     Linking.canOpenURL(url).then(supported => {
@@ -154,8 +216,12 @@ export default Main = ({ navigation }) => {
                                         }
                                     });
                                 }}>
-                                <View style={{ width: 260, padding: 16 }}>
-                                    <Text style={{ fontWeight: "bold" }}>
+                                <View style={{
+                                    padding: 16,
+                                    backgroundColor: "#FFF",
+                                    borderRadius: 16
+                                }}>
+                                    <Text style={{ fontWeight: "bold", textAlign: "center" }}>
                                         {point.nome}
                                     </Text>
                                     <View style={{ flexDirection: "row" }}>
@@ -190,6 +256,43 @@ export default Main = ({ navigation }) => {
 }
 
 const styles = StyleSheet.create({
+    btnCaixa: {
+        zIndex: 1,
+        backgroundColor: AppStyles.color.verdeClaro,
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+        borderRadius: 10,
+    },
+    barIcons: {
+        backgroundColor: AppStyles.color.roxo,
+        width: 300,
+        height: 50,
+        borderRadius: 30,
+        position: 'absolute',
+        bottom: 20,
+        left: 20,
+        zIndex: 1,
+        paddingVertical: 7,
+        flexDirection: "row",
+        justifyContent: "space-around"
+    },
+    textTopo: {
+        position: 'absolute',
+        zIndex: 1,
+        top: 20,
+        left: 20,
+        backgroundColor: '#fff',
+        padding: 16,
+        borderRadius: 16
+    },
+    callout: {
+        width: 360,
+        padding: 16,
+        backgroundColor: "#FFF",
+        borderRadius: 16,
+        marginBottom: 10
+    },
     btnAdd: {
         backgroundColor: AppStyles.color.roxo,
         width: 50,
