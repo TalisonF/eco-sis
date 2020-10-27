@@ -6,6 +6,7 @@ import api from "../services/api"
 import { useSelector } from "react-redux";
 import { AppStyles } from '../../AppStyles'
 import { Icon } from "react-native-elements";
+import Loader from '../services/loader'
 
 
 export default Main = ({ navigation }) => {
@@ -14,6 +15,7 @@ export default Main = ({ navigation }) => {
     const [points, setPoints] = useState([])
     const [addPoint, setAddPoint] = useState(false)
     const [pointSelecionado, setPointSelecionado] = useState()
+    const [loading, setLoading] = useState(false)
 
     const [addCoordinate, setAddCoordinate] = useState([])
 
@@ -69,12 +71,12 @@ export default Main = ({ navigation }) => {
         }
     };
 
-    async function loadDevs() {
+    async function loadDevs(carregar = false) {
         if (user.token === undefined) {
             return 0;
         }
         const { latitude, longitude } = currentRegion;
-
+        setLoading(carregar)
         const { data } = await api.get('/buscaponto', {
             headers: {
                 Authorization: `Bearer ${user.token}`
@@ -84,7 +86,18 @@ export default Main = ({ navigation }) => {
                 long: longitude
             }
         });
+        setLoading(false);
         setPoints(data)
+    }
+
+    async function handleDelete(idColeta) {
+        setLoading(true)
+        const { data } = await api.delete(`/coleta/${idColeta}`, {
+            headers: {
+                Authorization: `Bearer ${user.token}`
+            }
+        });
+        loadDevs(true);
     }
 
     function handleRegionChanged(region) {
@@ -96,6 +109,7 @@ export default Main = ({ navigation }) => {
             addCoordinate: addCoordinate,
             atualizar: () => {
                 setAddPoint(false);
+                setPointSelecionado(undefined)
                 loadDevs();
             }
         })
@@ -106,6 +120,8 @@ export default Main = ({ navigation }) => {
     }
     return (
         <>
+            <Loader loading={loading} />
+            {!addPoint ? (
                 <TouchableOpacity
                     style={styles.btnAdd}
                     onPress={() => setAddPoint(!addPoint)}
@@ -116,6 +132,19 @@ export default Main = ({ navigation }) => {
                         color={"#FFF"}
                     />
                 </TouchableOpacity>
+            ) : (
+                    <TouchableOpacity
+                        style={styles.btnAdd}
+                        onPress={() => setAddPoint(!addPoint)}
+                    >
+                        <Icon
+                            name="times"
+                            type='font-awesome-5'
+                            color={"#FFF"}
+                        />
+                    </TouchableOpacity>
+                )}
+
             {addPoint && (
                 <View style={styles.barIcons}>
                     <TouchableOpacity
@@ -171,7 +200,7 @@ export default Main = ({ navigation }) => {
                             <TouchableOpacity
                                 style={styles.btnCaixa}
                                 onPress={() => {
-                                    console.log(pointSelecionado)
+                                    handleDelete(pointSelecionado.id)
                                 }}
                             >
                                 <Text style={{ color: "#fff", fontWeight: "bold" }}>
